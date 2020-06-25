@@ -1,0 +1,374 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Scoring system</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+</head>
+<body>
+
+    <h1>Скоринг клиента</h1>
+    <hr>
+    <br>
+    <label>ИИН:</label><br>
+    <input type="text"  id="iiinnn" placeholder="ИИН" maxlength="12" required autofocus/> <br>
+    <label>Номер основного сотового телефона:</label><br>
+    <input type="tel" id="phone" placeholder="8777-777-77-77" pattern="[0-9]{4}-[0-9]{3}-[0-9]{2}-[0-9]{2}" required/> <br>
+    <label>Email- электронная почта:</label><br>
+    <input type="email" placeholder="почта" required/><br>
+
+    <button id="checkcode">Создать и отправить код проверки</button><br>
+    <label id="codelabel">Код проверки:</label><br>
+    <input id="codeinput" type="number" placeholder="код" min="1000" max="9999"/> <br>
+    <button id="checksentcode">проверить код</button>
+    <h3 id="countdown"></h3>
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <p id="response"></p>
+        </div>
+    </div>
+        <h3 id="datatable">Data from GBDFL</h3>
+        <table id="table">
+            <tbody>
+                <tr class="rows">
+                    <th>IIN</th>
+                    <td id="IIN"></td>
+                </tr>
+                <tr>
+                    <th>Date of birth</th>
+                    <td id="date of birth"></td>
+                </tr>
+                <tr>
+                    <th>First name</th>
+                    <td id="First name"></td>
+                </tr>
+                <tr>
+                    <th>Last name</th>
+                    <td id="Last name"></td>
+                </tr>
+                <tr>
+                    <th>Middle name</th>
+                    <td id="Middle name"></td>
+                </tr>
+                <tr>
+                    <th>Place of birth</th>
+                    <td id="Place of birth"></td>
+                </tr>
+                <tr>
+                    <th>Region</th>
+                    <td id="Region"></td>
+                </tr>
+                <tr>
+                    <th>City</th>
+                    <td id="City"></td>
+                </tr>
+                <tr>
+                    <th>Street</th>
+                    <td id="Street"></td>
+                </tr>
+                <tr>
+                    <th>House</th>
+                    <td id="House"></td>
+                </tr>
+                <tr>
+                    <th>Flat</th>
+                    <td id="Flat"></td>
+                </tr>
+                <tr>
+                    <th>Marital status</th>
+                    <td id="Marital status"></td>
+                </tr>
+            </tbody>
+        </table>
+    <script type="text/javascript"> 
+        var terrorists = "{{ terrorists_IIN|safe }}";
+        var blacklists = "{{ blacklists_IIN|safe }}";
+        var applications = "{{ applications|safe }}";
+        var clients_info_gbdfl = "{{ clients_info_gbdfl|safe}}";
+        var clients_info_gcvp = "{{ clients_info_gcvp|safe}}";
+        var clients_info_cb = "{{ clients_info_cb|safe}}";
+        for(var i=0; i<clients_info_gbdfl.length; i++){
+            if(clients_info_gbdfl[i]==']' || clients_info_gbdfl[i]=='[')
+                clients_info_gbdfl= clients_info_gbdfl.replace(clients_info_gbdfl[i], "");
+        }
+        var clients_info_reg = "{{ clients_info_reg|safe }}";
+        var reg_data = clients_info_reg.split("},");
+        var gbdfl_data = clients_info_gbdfl.split("},");
+        var gcvp_data = clients_info_gcvp.split("},");
+        var cb_data = clients_info_cb.split("},");
+        var sendcode = document.getElementById("checksentcode");
+        var checkcode = document.getElementById("checkcode");
+        var modal = document.getElementById("myModal");
+        var span = document.getElementsByClassName("close")[0];
+        checkcode.onclick = timerMe;
+        var counter = 1800;
+        var func;
+
+
+        var date_of_birth, First_name, Last_name, Middle_name, Place_of_birth, Region, City, Street, House, Flat, Marital_status;
+        function get_gbdfl_data(){ 
+
+            for(var i=0; i<gbdfl_data.length; i++){
+                if (gbdfl_data[i].includes(document.getElementById("iiinnn").value)){
+                    var datas =gbdfl_data[i].split(", '");
+                    document.getElementById("datatable").style.display= "block";
+                    document.getElementById("table").style.display= "block";
+                    document.getElementById("IIN").innerHTML = document.getElementById("iiinnn").value;
+                    date_of_birth = datas[2].substring(30, 42).replace(")", "");
+                    document.getElementById("date of birth").innerHTML = date_of_birth;
+                    First_name = datas[3].replace("first_name':", "").replace("'", "");
+                    First_name =First_name.substr(0, First_name.length-1);
+                    document.getElementById("First name").innerHTML = First_name;
+                    Last_name = datas[4].replace("last_name':", "").replace("'", "");
+                    Last_name = Last_name.substr(0, Last_name.length-1);
+                    document.getElementById("Last name").innerHTML = Last_name;
+                    Middle_name = datas[5].replace("middle_name':", "").replace("'", "");
+                    Middle_name = Middle_name.substr(0, Middle_name.length-1);
+                    document.getElementById("Middle name").innerHTML = Middle_name;
+                    Place_of_birth = datas[6].replace("place_of_birth':", "").replace("'", "");
+                    Place_of_birth = Place_of_birth.substr(0, Place_of_birth.length-1);
+                    document.getElementById("Place of birth").innerHTML = Place_of_birth;
+                    Region = datas[7].replace("region':", "").replace("'", "");
+                    Region = Region.substr(0, Region.length-1);
+                    document.getElementById("Region").innerHTML = Region;
+                    City = datas[8].replace("city':", "").replace("'", "");
+                    City = City.substr(0, City.length-1);
+                    document.getElementById("City").innerHTML = City;
+                    Street = datas[9].replace("street':", "").replace("'", "");
+                    Street = Street.substr(0, Street.length-1);
+                    document.getElementById("Street").innerHTML = Street;
+                    House = datas[10].replace("house':", "").replace("'", "");
+                    House = House.substr(0, House.length-1);
+                    document.getElementById("House").innerHTML = House;
+                    Flat = datas[11].replace("flat':", "").replace("'", "");
+                    Flat = Flat.substr(0, Flat.length-1);
+                    document.getElementById("Flat").innerHTML = Flat;
+                    Marital_status = datas[12].replace("marital_status':", "").replace("'", "");
+                    Marital_status = Marital_status.substr(0, Marital_status.length-1);
+                    Marital_status = Marital_status.replace("'", "");
+                    document.getElementById("Marital status").innerHTML = Marital_status;
+                }
+            }
+        }
+     
+        function timerMe(){
+            var phoneNumber = document.getElementById("phone").value;
+            var IIN = document.getElementById("iiinnn").value;
+            if(phoneNumber!="" && IIN!="")
+            {
+                sendCodeToPhone();
+                func = setInterval(function(){
+                    counter--;
+                    if(counter>=0){
+                        var result = parseInt(counter/60)+':'+counter%60;
+                        document.getElementById("countdown").innerHTML = result;
+                        document.getElementById("countdown").style.color = '#000000';
+                    }
+                }, 1000)
+                sleep(3000).then(()=>{
+                    get_gbdfl_data();
+                })
+            }
+            else {
+                document.getElementById("countdown").innerHTML ="Поля обязательны для заполнения";
+                document.getElementById("countdown").style.color = '#d00';
+            }
+        }
+        span.onclick = function(){
+            modal.style.display = "none";
+        }
+        window.onclick = function(event) {
+            if (event.target == modal) {
+            modal.style.display = "none";
+            }
+        }
+        const sleep = (milliseconds) => {
+            return new Promise(resolve => setTimeout(resolve, milliseconds))
+        }
+        sendcode.onclick = function(){
+            var IIN = new String(document.getElementById("iiinnn").value);
+            var sms_code = new String(document.getElementById("codeinput").value);
+            var array_IIN_smscode = applications.replace('[', '').replace(']', '');
+            clearInterval(func);
+            if(IIN!="" && sms_code!=""){
+                    if(array_IIN_smscode.includes(IIN+"', '"+sms_code))
+                        {
+                            document.getElementById("countdown").innerHTML = '';
+                            alert('Контакт успешно подтвержден. Предварительная обработка в процессе. Пожалуйста, подождите');
+                            document.getElementById("countdown").style.color = '#000000';
+                            checkHard();    
+                            if(checkHardSuccess){
+                                sleep(3000).then(()=>{
+                                        modal.style.display="block";
+                                        if(confirm("Ваша заявка пре-одобрено. Хотите продолжить? ")){
+                                            document.getElementById("response").innerHTML = "Ваша заявка принята. Скоринг начался. Пожалуйста подождите.";
+                                            document.getElementById("countdown").innerHTML ="";
+
+                                            calculate_offer();
+                                        }
+                                        else {
+                                        document.getElementById("response").innerHTML = "Сеанс завершен";
+                                        document.getElementById("countdown").innerHTML ="";
+                                    }
+                                })
+                            }
+                            else{
+                            alert("Запрос был отклонен.");
+                            modal.style.display = "block";
+                            document.getElementById("response").innerHTML = "Сеанс завершен";
+                            }   
+                        }
+                        else {
+                        alert('Неправильный код. Попробуйте еще раз');
+                    }
+                }   
+            else {
+                alert("Введите код из SMS!");
+            }
+        }
+        function sendCodeToPhone(){
+            var phoneNumber = document.getElementById("phone").value;
+            var code = Math.floor(Math.random()*10000);
+        }
+        var checkHardSuccess = false;
+        function checkHard() {
+            
+            var BreakException = {};
+            var isTerrorist= false;
+            var isValidAge = false;
+            var isInBlackList = false;
+            var age;
+            var IIN = new String(document.getElementById("iiinnn").value);
+            if(IIN!=""){
+                if(IIN[0]>2){
+                age = 2020-(1900+parseInt(IIN[0])*10+parseInt(IIN[1])); //2020-(1900+90)
+                if (age <=73 && age>=22){
+                    isValidAge = true;
+                }
+                else 
+                {
+                    isValidAge=false;
+                    checkHardSuccess = false;
+                }
+            }
+                else {
+                    isValidAge = false;
+                    checkHardSuccess = false;
+
+                }
+                try{
+                    if(terrorists.includes(IIN))
+                        {
+                            isTerrorist =true;
+                            checkHardSuccess = false;
+                            throw BreakException;
+                        }
+                }catch(e){
+                    if(e!==BreakException) throw e;
+                }
+                try{
+                    if(blacklists.includes(IIN))
+                        {
+                            isInBlackList =true;
+                            checkHardSuccess = false;
+                            throw BreakException;
+                        }
+                }catch(e){
+                    if(e!==BreakException) throw e;
+                }
+                if(isValidAge && !isTerrorist && !isInBlackList){
+                    checkHardSuccess = true;
+            }
+        }
+    }
+    function calculate_offer(){
+        var mon_income, max_credit_amount, mon_payment;
+        var IIN = document.getElementById("iiinnn").value;
+        request_cb();
+        var external_mon_pay = cb_Map1.get(IIN);
+        if(request_gcvp()==null){
+            mon_income = request_regional();
+        }
+        else{
+            mon_income = request_gcvp();
+        }
+        
+        var isRejected = false;
+        if(mon_income/external_mon_pay<=2){
+            isRejected=true;
+        }
+        if(cb_Map2.get(IIN)>=60 || cb_Map3.get(IIN)>=60){
+            isRejected = true;
+        } 
+        else {
+            mon_payment = mon_income/2 - external_mon_pay;
+            if(mon_payment<1000){
+                isRejected = true;
+            }
+            max_credit_amount = mon_payment*48;
+        }
+        sleep(3000).then(()=>{
+            if(isRejected){
+                document.getElementById("datatable").style.display= "block";
+                document.getElementById("response").innerHTML = "Запрос был отклонен. Банк не может дать вам кредит.";
+                
+            }
+            else{
+                document.getElementById("datatable").style.display= "block";
+                document.getElementById("response").innerHTML = "Запрос успешно завершен. Максимальная сумма кредита "+ max_credit_amount +" тг";
+                
+            }
+        })
+    }
+    function request_gcvp(){
+        var IIN = document.getElementById("iiinnn").value;
+        let gcvp_Map = new Map();
+        var gcvp_IIN, gcvp_mon_inc;
+        for(var i=0; i<gcvp_data.length; i++){
+            var index1 = gcvp_data[i].indexOf("IIN':");
+            gcvp_IIN = gcvp_data[i].substr(index1+7, 12);
+            var index2 = gcvp_data[i].indexOf("ome': ");
+            gcvp_mon_inc = gcvp_data[i].substring(index2+6).replace("}]", "");
+            gcvp_Map.set(gcvp_IIN, gcvp_mon_inc);
+        }
+        return gcvp_Map.get(IIN);   
+    }
+    var cb_Map1 = new Map();
+    var cb_Map2 = new Map();
+    var cb_Map3 = new Map();
+    function request_cb(){
+       var IIN = document.getElementById("iiinnn").value;
+        var cb_IIN, cb_mon_pay, cb_act_dpd, cb_hist_dpd;
+        for(var i=0; i<cb_data.length; i++){
+            var ind1 = cb_data[i].indexOf("IIN':");
+            cb_IIN = cb_data[i].substr(ind1+7, 12);
+            var ind2 = cb_data[i].indexOf("ment");
+            var ind3 = cb_data[i].indexOf(", 'act");
+            cb_mon_pay = cb_data[i].substring(ind2+6, ind3);
+            var ind4 = cb_data[i].indexOf("ual_dpd': ");
+            var ind5 = cb_data[i].indexOf(", 'hist");
+            cb_act_dpd = cb_data[i].substring(ind4+10, ind5);
+            var ind6 = cb_data[i].indexOf("ical_dpd': ");
+            cb_hist_dpd = cb_data[i].substr(ind6+10, cb_data[i].length).replace("}]", "");
+            cb_Map1.set(cb_IIN, cb_mon_pay);
+            cb_Map2.set(cb_IIN, cb_act_dpd);
+            cb_Map3.set(cb_IIN, cb_hist_dpd); 
+        }
+        
+    }
+    function request_regional(){
+        var reeegion = document.getElementById("Region").innerText;
+        var regional_Map = new Map();
+        for(var i=0; i<reg_data.length; i++){
+            var index1 = reg_data[i].indexOf("ion':");
+            var index2 = reg_data[i].indexOf("', 'avg");
+            var index3 = reg_data[i].indexOf("ome': ");
+            regional_Map.set(reg_data[i].substring(index1+7, index2), reg_data[i].substring(index3+6).replace("}]", "")); 
+        }
+        return regional_Map.get(reeegion);
+    }
+    </script>
+</body>
+</html>
